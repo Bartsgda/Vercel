@@ -1,27 +1,36 @@
-# TERAPIA - Raport z Wdrożenia v1.1 (Marzec 2026)
+# TERAPIA - Raport z Wdrożenia v1.1.5 (Marzec 2026)
 
-Niniejszy dokument podsumowuje kluczowe zmiany w interfejsie i architekturze aplikacji TERAPIA, wprowadzone w celu profesjonalizacji systemu i optymalizacji pod kątem wydajności.
+Niniejszy dokument podsumowuje kluczowe zmiany w interfejsie, architekturze aplikacji oraz konfiguracji serwerowej wprowadzone w marcu 2026.
 
-## 🚀 Główne Usprawnienia
+## 🚀 Główne Usprawnienia i Nowości
 
-### 1. Inteligentny Motyw Dzień/Noc (Theme Engine)
-- **Implementacja**: Pełne wsparcie dla `data-theme="light"` i `dark`.
-- **Czytelność**: Specjalne korekty kontrastu dla trybu jasnego (ciemne czcionki `#111827`, błękitne akcenty, żółte wyróżnienia tekstu w czytniku).
-- **Automatyzacja**: System zapamiętuje wybór użytkownika w `localStorage`.
+### 1. Rozbudowany System Dat i Tradycji
+- **Dzień Tygodnia**: Nagłówek Dashboardu wyświetla teraz pełną nazwę dnia tygodnia (np. "Piątek, 13 marca").
+- **Imieniny**: Zintegrowano lokalną bazę danych imienin (dla każdego dnia roku). Dane są ładowane bezpośrednio przez JavaScript, co zapewnia błyskawiczne działanie bez obciążania zewnętrznych API.
 
-### 2. Optymalizacja Bazy Danych (Index-Based Storage)
-- **Mały format danych**: Zmiana z tablicy 27 wartości logicznych na zwięzłą listę indeksów (np. `[0, 5, 12]`).
-- **Migracja**: Wbudowany skrypt automatycznie konwertuje stare dane użytkownika przy pierwszym uruchomieniu.
-- **Wydajność**: Mniejsze pliki JSON to szybszy eksport, import i synchronizacja.
+### 2. Inteligentne Wykrywanie Mediów (Video Engine)
+- **YouTube Support**: System automatycznie rozpoznaje linki YouTube w panelu bocznym i pobiera dla nich oryginalne miniatury (thumbnails).
+- **Google Photos**: Specjalna klasa `linkCard--video` wykrywa linki do współdzielonych albumów Google i wyświetla dedykowaną kartę z ikoną "Play", nadając multimediom profesjonalny wygląd.
+- **Dynamiczne Ikony**: Linki są teraz kategoryzowane (Wideo vs Strony WWW) z odpowiednimi ikonami (🎬 vs 🔗).
 
-### 3. Nowa Chronologia Sesji
-- **Sortowanie po dacie**: Aplikacja ignoruje numerację "chapter1, chapter2" na rzecz daty wydarzenia wpisanej w `chapters.json`.
-- **Prezentacja**: W bibliotece i nagłówku czytnika data jest teraz głównym elementem identyfikacyjnym (np. **15.02.2026 • Mały przyjaciel**).
+### 3. Optymalizacja UI i Nawigacji
+- **Nowy Home Button**: W widoku rozdziału, przycisk "Rozdziały" został zastąpiony minimalistyczną ikoną typu **Home**, co poprawia UX na urządzeniach mobilnych.
+- **Standardy W3C (Tryb Standardowy)**: Wyeliminowano błąd "Quirks Mode" poprzez usunięcie pustych znaków przed deklaracją `<!DOCTYPE html>`. System wymusza teraz nowoczesne renderowanie HTML5.
 
-### 4. Profesjonalny Dashboard
-- **Zintegrowany Czytnik**: Panel sterowania audio wbudowany w `topHeader` z efektem glassmorphism.
-- **Sekcja "Jak notować?"**: Nowy moduł edukacyjny z poradami dotyczącymi skutecznej samoobserwacji.
-- **Statystyki**: Dynamiczne liczniki dni z wpisem i średniej ilości objawów.
+---
+
+## 🔒 Konfiguracja Serwera (.htaccess)
+
+Zaprojektowaliśmy wielowarstwowy system zabezpieczeń dostosowany do hostingu `webd.pl` (Apache):
+
+### Główny Katalog (Anti-500 & Performance):
+- **Stabilność**: Przywrócono sprawdzony handler `AddHandler application/x-httpd-php83 php`, eliminując błędy 500.
+- **Clean URLs**: Obsługa przyjaznych linków `domena.pl/chapter/id` przekierowujących do `chapter.php?id=id`.
+- **Wymuszenie HTTPS**: Automatyczne przekierowanie na bezpieczny protokół SSL.
+
+### Podfoldery (Ochrona Danych):
+- **`/data/.htaccess`**: Całkowita blokada dostępu zewnętrznego (`Deny from all`). Twoje pliki JSON z notatkami są niedostępne z poziomu przeglądarki, ale w pełni czytelne dla PHP.
+- **`/media/.htaccess`**: Blokada skryptów PHP i plików JSON przy jednoczesnym pozwoleniu przeglądarce na ładowanie obrazów (`jpg`, `png`, `webp`) oraz plików `pdf` dla pacjenta.
 
 ---
 
@@ -39,6 +48,7 @@ graph TD
         LS[(localStorage)] <--> J[journal.js]
         J --> |Dziennik i Statystyki| CalJS
         J --> |Zarządzanie Motywem| UI[Stylizacja CSS]
+        CalJS --> |Lokalna Baza| IM[Imieniny / Dni tygodnia]
     end
 
     subgraph "Interfejs (UI)"
@@ -51,19 +61,17 @@ graph TD
 
 ---
 
-## 📦 GitHub Release Summary (v1.1.0)
+## 📦 GitHub Release Summary (v1.1.5)
 
-**Tag:** `v1.1.0-release`
-**Message:** Refactor UI/UX & Data Engine Optimization
+**Tag:** `v1.1.5-security-update`
+**Message:** Security Hardening & Extended UI Features
 
 ### Changelog:
-- **Feat**: Added Light/Dark mode with persistent storage.
-- **Feat**: Optimized journal data format (index-based JSON).
-- **Feat**: Implemented chronological sorting for lessons and notes.
-- **Fix**: Improved text contrast in light mode for better readability.
-- **Fix**: Redesigned mini-calendar to use minimalist dots.
-- **Doc**: Added comprehensive project documentation and "How to journal" guide.
-- **Dev**: Prepared production-ready `.htaccess` for webd.pl and `vercel.json`.
+- **Security**: Granular block for JSON files in `/data` via subfolder-level `.htaccess`.
+- **Feat**: Added local Name-Days database (Imieniny) to dashboard header.
+- **Feat**: Implemented YouTube/Google Photos video link detection with thumbnails.
+- **Fix**: Removed Quirks Mode by merging PHP tags with DOCTYPE.
+- **Fix**: Restored PHP 8.3 handler to fix 500 errors on webd.pl.
 
 ---
-*Status: ZAKOŃCZONO. System gotowy do wdrożenia produkcyjnego.*
+*Status: ZAKOŃCZONO. System zabezpieczony i w pełni udokumentowany.*
