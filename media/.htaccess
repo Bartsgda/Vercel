@@ -1,0 +1,5 @@
+# TERAPIA - Zabezpieczenie mediów
+Options -Indexes
+<FilesMatch "\.(php|json|log|sh)$">
+    Deny from all
+</FilesMatch>
