@@ -5,10 +5,13 @@ if (!preg_match('/^[a-zA-Z0-9_-]+$/', $id)) { http_response_code(400); exit("Bł
 $dataPath = __DIR__ . "/data/$id.json";
 if (!file_exists($dataPath)) { http_response_code(404); exit("Brak rozdziału."); }
 
-$data = json_decode(file_get_contents($dataPath), true);
-$chapterMeta = json_decode(file_get_contents(__DIR__ . "/data/chapters.json"), true);
+$data = json_decode(@file_get_contents($dataPath), true);
+if (!$data) {
+  die("Błąd: Nie można wczytać danych rozdziału. Sprawdź czy plik JSON istnieje.");
+}
+$chapterMeta = json_decode(@file_get_contents(__DIR__ . "/data/chapters.json"), true);
 // Chronological sort
-if (isset($chapterMeta["chapters"])) {
+if (isset($chapterMeta["chapters"]) && is_array($chapterMeta["chapters"])) {
     usort($chapterMeta["chapters"], function($a, $b) { return strcmp($a['date'] ?? '', $b['date'] ?? ''); });
 }
 
@@ -59,8 +62,7 @@ foreach ($files as $f) {
     break;
   }
 }
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">

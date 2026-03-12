@@ -1,10 +1,9 @@
 <?php
-$chapters = json_decode(file_get_contents(__DIR__ . "/data/chapters.json"), true);
-if (isset($chapters["chapters"])) {
+$chapters = json_decode(@file_get_contents(__DIR__ . "/data/chapters.json"), true);
+if ($chapters && isset($chapters["chapters"]) && is_array($chapters["chapters"])) {
     usort($chapters["chapters"], function($a, $b) { return strcmp($a['date'] ?? '', $b['date'] ?? ''); });
 }
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">

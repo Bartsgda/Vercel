@@ -1,81 +1,17 @@
-<Files "consultations.json">
-  Order Allow,Deny
-  Deny from all
-#Wersja PHP zmieniona: 2025-10-11 17:43:20
-AddHandler application/x-httpd-php83 php
-
-# ============================================
-# Dzienniczek samoobserwacji# TERAPIA - Konfiguracja pod webd.pl
+# TERAPIA - Minimalna konfiguracja pod webd.pl
 # ----------------------------
 
-# 1. Wymuszenie PHP 8.1+ (zależnie od konfiguracji cPanel na webd.pl)
-# <IfModule mime_module>
-#   AddHandler application/x-httpd-ea-php81 .php
-# </IfModule>
+# 1. Wersja PHP (oryginalna z serwera)
+# AddHandler application/x-httpd-php83 php
 
-# 2. Bezpieczeństwo
-Options -Indexes
-ServerSignature Off
-
-# Blokada bezpośredniego dostępu do plików danych i dzienniczka
-<FilesMatch "\.(json|log|sh|txt)$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order deny,allow
-        Deny from all
-    </IfModule>
-</FilesMatch>
-
-# Pozwól na dostęp do chapters.json i events.json (potrzebne do JS)
-<Files "chapters.json">
-    <IfModule mod_authz_core.c>
-        Require all granted
-    </IfModule>
-</Files>
-<Files "events.json">
-    <IfModule mod_authz_core.c>
-        Require all granted
-    </IfModule>
-</Files>
-
-# 3. Ustawienia środowiska
+# 2. Kodowanie
 AddDefaultCharset UTF-8
-SetEnv TZ Europe/Warsaw
 
-# 4. Reguły Rewrite
+# 3. Podstawowy Rewrite (jeśli SSL jest włączony, usuń komentarz)
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
     
-    # Przekierowanie na HTTPS (zakładając certyfikat SSL na webd.pl)
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-    # Clean URLs dla Rozdziałów
+    # Przekierowanie /chapter/id -> chapter.php?id=id
     RewriteRule ^chapter/([a-zA-Z0-9_-]+)/?$ chapter.php?id=$1 [L,QSA]
-
-    # Obsługa brakujących .php
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME}\.php -f
-    RewriteRule ^([^\.]+)$ $1.php [NC,L]
-</IfModule>
-
-# Nagłówki bezpieczeństwa (ważne dla uniknięcia ostrzeżeń phishing)
-<IfModule mod_headers.c>
-    # X-Content-Type-Options - zapobiega MIME sniffing
-    Header set X-Content-Type-Options "nosniff"
-    
-    # X-Frame-Options - zapobiega clickjacking
-    Header set X-Frame-Options "SAMEORIGIN"
-    
-    # X-XSS-Protection - dodatkowa ochrona XSS
-    Header set X-XSS-Protection "1; mode=block"
-    
-    # Referrer-Policy - kontrola informacji o referrerze
-    Header set Referrer-Policy "strict-origin-when-cross-origin"
-    
-    # Permissions-Policy - kontrola dostępu do funkcji przeglądarki
-    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
 </IfModule>
