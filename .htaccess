@@ -1,17 +1,35 @@
-# TERAPIA - Minimalna konfiguracja pod webd.pl
+<Files "consultations.json">
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+#Wersja PHP zmieniona: 2025-10-11 17:43:20
+AddHandler application/x-httpd-php83 php
+
+# TERAPIA - Konfiguracja pod webd.pl
 # ----------------------------
 
-# 1. Wersja PHP (oryginalna z serwera)
-# AddHandler application/x-httpd-php83 php
+# 1. Bezpieczeństwo
+Options -Indexes
+ServerSignature Off
 
-# 2. Kodowanie
+# 2. Kodowanie i Środowisko
 AddDefaultCharset UTF-8
 
-# 3. Podstawowy Rewrite (jeśli SSL jest włączony, usuń komentarz)
+# 3. Reguły Rewrite
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
     
-    # Przekierowanie /chapter/id -> chapter.php?id=id
+    # Przekierowanie na HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Clean URLs dla Rozdziałów
     RewriteRule ^chapter/([a-zA-Z0-9_-]+)/?$ chapter.php?id=$1 [L,QSA]
+
+    # Obsługa brakujących .php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^([^\.]+)$ $1.php [NC,L]
 </IfModule>
