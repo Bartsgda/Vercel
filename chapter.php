@@ -75,9 +75,8 @@ foreach ($files as $f) {
 <header class="topHeader">
   <div class="topHeader__inner">
     <div class="topHeader__left">
-      <a class="back" href="index.php" aria-label="Wróć">
-        <span class="icon icon--back" aria-hidden="true"></span>
-        <span class="back__txt">Rozdziały</span>
+      <a class="back" href="index.php" aria-label="Strona główna">
+        <span class="icon icon--home" aria-hidden="true"></span>
       </a>
       <div class="brand brand--small">
         <div class="brand__title">TERAPIA</div>
@@ -246,15 +245,38 @@ foreach ($files as $f) {
           <div>
             <div class="sideNav__title">Linki</div>
             <div class="links-list">
-              <?php foreach($data["links"] as $l): ?>
-                <a class="linkCard" href="<?=htmlspecialchars($l["url"])?>" target="_blank" rel="noreferrer">
+              <?php foreach(($data["links"] ?? []) as $l): 
+                $url = $l["url"] ?? "";
+                $isVideo = (strpos($url, 'share.google') !== false || strpos($url, 'photos.app.goo.gl') !== false || strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false);
+                
+                // YouTube Thumb Logic
+                $thumb = null;
+                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $url, $match)) {
+                  $thumb = "https://img.youtube.com/vi/{$match[1]}/mqdefault.jpg";
+                } elseif (strpos($url, 'share.google') !== false) {
+                  // For Google Photos, we show a generic video thumbnail icon if we can't get a direct preview easily
+                  $thumb = "assets/video_placeholder.png"; 
+                }
+              ?>
+                <a class="linkCard <?= $isVideo ? 'linkCard--video' : '' ?>" href="<?=htmlspecialchars($url)?>" target="_blank" rel="noreferrer">
+                  <?php if($isVideo && $thumb): ?>
+                    <div class="linkCard__thumb">
+                      <img src="<?= $thumb ?>" alt="Miniatura wideo" onerror="this.src='media/default_video.png'">
+                      <div class="linkCard__playOverlay">▶</div>
+                    </div>
+                  <?php endif; ?>
                   <div class="linkCard__body">
-                    <div class="linkCard__title"><?=htmlspecialchars($l["title"])?></div>
+                    <div class="linkCard__title">
+                      <?php if(!$isVideo): ?><span class="icon icon--link" style="font-size:12px; margin-right:5px;">🔗</span><?php endif; ?>
+                      <?=htmlspecialchars($l["title"])?>
+                    </div>
                     <?php if(!empty($l["comment"])): ?>
                       <div class="linkCard__comment"><?=htmlspecialchars($l["comment"])?></div>
                     <?php endif; ?>
                   </div>
-                  <span class="icon" style="font-size:12px; opacity:0.5;">↗</span>
+                  <?php if(!$isVideo): ?>
+                    <span class="icon" style="font-size:12px; opacity:0.5;">↗</span>
+                  <?php endif; ?>
                 </a>
               <?php endforeach; ?>
             </div>
