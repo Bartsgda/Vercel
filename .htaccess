@@ -3,25 +3,41 @@
   Deny from all
 </Files>
 
-#Wersja PHP zmieniona: 2025-10-11 17:43:20
+# Wersja PHP (oryginalna z serwera webd.pl)
 AddHandler application/x-httpd-php83 php
 
-# TERAPIA - Konfiguracja pod webd.pl
+# TERAPIA - Konfiguracja
 # ----------------------------
 
 # 1. Bezpieczeństwo
 Options -Indexes
 ServerSignature Off
 
-# 2. Kodowanie i Środowisko
+# Blokada直接 dostępu do plików danych w tym folderze
+<FilesMatch "\.(json|log|sh|txt|bak|old)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Pozwól na dostęp do niezbędnych plików konfiguracyjnych dla JS
+<Files "chapters.json">
+    Order allow,deny
+    Allow from all
+</Files>
+<Files "events.json">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# 2. Kodowanie
 AddDefaultCharset UTF-8
 
-# 3. Reguły Rewrite
+# 3. Reguły Rewrite (Clean URLs & HTTPS)
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
     
-    # Przekierowanie na HTTPS
+    # Wymuszenie HTTPS
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
