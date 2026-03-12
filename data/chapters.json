@@ -2,16 +2,27 @@
   "chapters": [
     {
       "id": "chapter1",
-      "title": "Proces wychodzenia ze współuzależnienia",
-      "subtitle": "Rozdział V – „Jak można Ci pomóc”",
-      "notebookUrl": "https://notebooklm.google.com/notebook/9dbce015-7bdd-4d29-b236-69cbed49aeec"
+      "title": "Mały przyjaciel",
+      "subtitle": "Domowa - Luty",
+      "date": "2026-02-15"
     },
     {
       "id": "chapter2",
       "title": "Zaczarowane koło zaprzeczeń",
       "subtitle": "Alkoholizm jako dramat w trzech aktach",
-      "notebookUrl": "https://pbc.uw.edu.pl/id/eprint/26942/",
-      "pdfUrl": "https://pbc.uw.edu.pl/id/eprint/26942/1/3_76_88.pdf"
+      "date": "2026-03-09"
+    },
+    {
+      "id": "chapter3",
+      "title": "DESIDERATA",
+      "subtitle": "Krocz spokojnie wśród zgiełku i pośpiechu...",
+      "date": "2026-03-12"
+    },
+    {
+      "id": "chapter4",
+      "title": "Współuzależnienie",
+      "subtitle": "Rozdział V – „Jak można Ci pomóc”",
+      "date": "2026-03-02"
     }
   ]
 }

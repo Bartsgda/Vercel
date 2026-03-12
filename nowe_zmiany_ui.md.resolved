@@ -1,0 +1,69 @@
+# TERAPIA - Raport z Wdrożenia v1.1 (Marzec 2026)
+
+Niniejszy dokument podsumowuje kluczowe zmiany w interfejsie i architekturze aplikacji TERAPIA, wprowadzone w celu profesjonalizacji systemu i optymalizacji pod kątem wydajności.
+
+## 🚀 Główne Usprawnienia
+
+### 1. Inteligentny Motyw Dzień/Noc (Theme Engine)
+- **Implementacja**: Pełne wsparcie dla `data-theme="light"` i `dark`.
+- **Czytelność**: Specjalne korekty kontrastu dla trybu jasnego (ciemne czcionki `#111827`, błękitne akcenty, żółte wyróżnienia tekstu w czytniku).
+- **Automatyzacja**: System zapamiętuje wybór użytkownika w `localStorage`.
+
+### 2. Optymalizacja Bazy Danych (Index-Based Storage)
+- **Mały format danych**: Zmiana z tablicy 27 wartości logicznych na zwięzłą listę indeksów (np. `[0, 5, 12]`).
+- **Migracja**: Wbudowany skrypt automatycznie konwertuje stare dane użytkownika przy pierwszym uruchomieniu.
+- **Wydajność**: Mniejsze pliki JSON to szybszy eksport, import i synchronizacja.
+
+### 3. Nowa Chronologia Sesji
+- **Sortowanie po dacie**: Aplikacja ignoruje numerację "chapter1, chapter2" na rzecz daty wydarzenia wpisanej w `chapters.json`.
+- **Prezentacja**: W bibliotece i nagłówku czytnika data jest teraz głównym elementem identyfikacyjnym (np. **15.02.2026 • Mały przyjaciel**).
+
+### 4. Profesjonalny Dashboard
+- **Zintegrowany Czytnik**: Panel sterowania audio wbudowany w `topHeader` z efektem glassmorphism.
+- **Sekcja "Jak notować?"**: Nowy moduł edukacyjny z poradami dotyczącymi skutecznej samoobserwacji.
+- **Statystyki**: Dynamiczne liczniki dni z wpisem i średniej ilości objawów.
+
+---
+
+## 🛠 Schemat Architektury
+
+```mermaid
+graph TD
+    subgraph "Dane (JSON)"
+        C[chapters.json] --> |Metadane i Sortowanie| P[PHP Engine]
+        E[events.json] --> |Harmonogram Stały| CalJS[calendar.js]
+        D[chapterID.json] --> |Treść i Linki| Reader[Czytnik Rozdziałów]
+    end
+
+    subgraph "Logika Klienta (JS)"
+        LS[(localStorage)] <--> J[journal.js]
+        J --> |Dziennik i Statystyki| CalJS
+        J --> |Zarządzanie Motywem| UI[Stylizacja CSS]
+    end
+
+    subgraph "Interfejs (UI)"
+        P --> Dash[Dashboard / Biblioteka]
+        CalJS --> |Renderowanie| CalUI[Widok Kalendarza]
+        Reader --> |Renderowanie| ReadUI[Widok Artykułu]
+        UI --> |Motyw Jasny/Ciemny| Dash & ReadUI
+    end
+```
+
+---
+
+## 📦 GitHub Release Summary (v1.1.0)
+
+**Tag:** `v1.1.0-release`
+**Message:** Refactor UI/UX & Data Engine Optimization
+
+### Changelog:
+- **Feat**: Added Light/Dark mode with persistent storage.
+- **Feat**: Optimized journal data format (index-based JSON).
+- **Feat**: Implemented chronological sorting for lessons and notes.
+- **Fix**: Improved text contrast in light mode for better readability.
+- **Fix**: Redesigned mini-calendar to use minimalist dots.
+- **Doc**: Added comprehensive project documentation and "How to journal" guide.
+- **Dev**: Prepared production-ready `.htaccess` for webd.pl and `vercel.json`.
+
+---
+*Status: ZAKOŃCZONO. System gotowy do wdrożenia produkcyjnego.*

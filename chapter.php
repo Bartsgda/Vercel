@@ -7,6 +7,11 @@ if (!file_exists($dataPath)) { http_response_code(404); exit("Brak rozdziału.")
 
 $data = json_decode(file_get_contents($dataPath), true);
 $chapterMeta = json_decode(file_get_contents(__DIR__ . "/data/chapters.json"), true);
+// Chronological sort
+if (isset($chapterMeta["chapters"])) {
+    usort($chapterMeta["chapters"], function($a, $b) { return strcmp($a['date'] ?? '', $b['date'] ?? ''); });
+}
+
 $meta = null;
 foreach(($chapterMeta["chapters"] ?? []) as $c){ if(($c["id"] ?? "") === $id){ $meta = $c; break; } }
 
@@ -45,6 +50,15 @@ foreach($mainCandidates as $cand){
 $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
   return $mainImage ? ($p !== $mainImage) : true;
 }));
+
+// Szukamy pliku MP3 do lektora
+$chapterAudio = null;
+foreach ($files as $f) {
+  if (strtolower(pathinfo($f, PATHINFO_EXTENSION)) === "mp3") {
+    $chapterAudio = $f;
+    break;
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pl">
@@ -52,47 +66,53 @@ $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><?=htmlspecialchars($data["title"] ?? "Rozdział")?></title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/style.css?v=<?=time()?>">
 </head>
 <body>
 
 <header class="topHeader">
   <div class="topHeader__inner">
-    <a class="back" href="index.php" aria-label="Wróć">
-      <span class="icon icon--back" aria-hidden="true"></span>
-      <span class="back__txt">Rozdziały</span>
-    </a>
-    <div class="brand brand--small">
-      <div class="brand__title">TERAPIA</div>
-      <div class="brand__subtitle"><?=htmlspecialchars($data["title"] ?? "")?></div>
+    <div class="topHeader__left">
+      <a class="back" href="index.php" aria-label="Wróć">
+        <span class="icon icon--back" aria-hidden="true"></span>
+        <span class="back__txt">Rozdziały</span>
+      </a>
+      <div class="brand brand--small">
+        <div class="brand__title">TERAPIA</div>
+        <div class="brand__subtitle"><?=htmlspecialchars($data["title"] ?? "")?></div>
+      </div>
+    </div>
+
+    <!-- Centered Reader Controls -->
+    <div class="readerControls">
+      <button class="rbBtn" onclick="reader.play()" title="Czytaj" aria-label="Czytaj">
+        <span class="icon icon--play" aria-hidden="true"></span>
+      </button>
+      <button class="rbBtn" onclick="reader.pause()" title="Pauza" aria-label="Pauza">
+        <span class="icon icon--pause" aria-hidden="true"></span>
+      </button>
+      <button class="rbBtn" onclick="reader.resume()" title="Wznów" aria-label="Wznów">
+        <span class="icon icon--resume" aria-hidden="true"></span>
+      </button>
+      <button class="rbBtn" onclick="reader.stop()" title="Stop" aria-label="Stop">
+        <span class="icon icon--stop" aria-hidden="true"></span>
+      </button>
+      <div class="rbSep"></div>
+      <div class="rbSpeed">
+        <div class="rbLabel">Tempo</div>
+        <input id="speed" type="range" min="0.7" max="1.6" step="0.1" value="1.1" aria-label="Tempo czytania">
+        <div id="speedValue" class="rbValue">1.1</div>
+      </div>
+      <?php if($chapterAudio): ?>
+        <div class="rbBadge" title="Dostępne autentyczne nagranie lektorskie">HQ Voice</div>
+      <?php endif; ?>
+    </div>
+    <div class="topHeader__actions">
+      <button id="themeToggle" class="theme-toggle" title="Przełącz motyw">🌓</button>
     </div>
   </div>
 </header>
 
-<div class="readerBar">
-  <div class="readerBar__shell">
-    <button class="rbBtn" onclick="reader.play()" title="Czytaj" aria-label="Czytaj">
-      <span class="icon icon--play" aria-hidden="true"></span>
-    </button>
-    <button class="rbBtn" onclick="reader.pause()" title="Pauza" aria-label="Pauza">
-      <span class="icon icon--pause" aria-hidden="true"></span>
-    </button>
-    <button class="rbBtn" onclick="reader.resume()" title="Wznów" aria-label="Wznów">
-      <span class="icon icon--resume" aria-hidden="true"></span>
-    </button>
-    <button class="rbBtn" onclick="reader.stop()" title="Stop" aria-label="Stop">
-      <span class="icon icon--stop" aria-hidden="true"></span>
-    </button>
-
-    <div class="rbSep"></div>
-
-    <div class="rbSpeed">
-      <div class="rbLabel">Tempo</div>
-      <input id="speed" type="range" min="0.7" max="1.6" step="0.1" value="1.1" aria-label="Tempo czytania">
-      <div id="speedValue" class="rbValue">1.1</div>
-    </div>
-  </div>
-</div>
 
 <main class="page page--chapter">
   <aside class="sideNav sideNav--left">
@@ -109,6 +129,15 @@ $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
         <?php endforeach; ?>
       </div>
     </div>
+
+    <!-- Mini Kalendarz -->
+    <div class="glassPanel glassPanel--sticky" style="margin-top: 18px; top: 380px;">
+      <div class="sideNav__title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Harmonogram</span>
+      </div>
+      <div style="font-size:11px; color:rgba(255,255,255,.6); margin-bottom:10px; text-align:center;" id="monthName"></div>
+      <div class="calGrid calGrid--mini" id="calGrid"></div>
+    </div>
   </aside>
 
   <section class="contentMain">
@@ -116,7 +145,17 @@ $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
       <h1 class="article__title"><?=htmlspecialchars($data["title"] ?? "")?></h1>
 
       <?php if(!empty($meta["subtitle"])): ?>
-        <div class="article__meta"><?=htmlspecialchars($meta["subtitle"])?></div>
+        <div class="article__meta">
+           <span style="font-weight: 700; color: var(--accent);"><?= !empty($meta['date']) ? date("d.m.Y", strtotime($meta['date'])) : "" ?></span>
+           <?= !empty($meta['date']) ? " &nbsp;•&nbsp; " : "" ?>
+           <?= htmlspecialchars($meta["subtitle"]) ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if(!empty($data["author"])): ?>
+        <div class="article__author" style="font-size: 14px; font-weight: 600; color: var(--muted); margin-top: -10px; margin-bottom: 20px;">
+          Autor: <?=htmlspecialchars($data["author"])?>
+        </div>
       <?php endif; ?>
 
       <?php if(!empty($data["lead"])): ?>
@@ -129,16 +168,6 @@ $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
         </figure>
       <?php endif; ?>
 
-      <?php if(!empty($meta["notebookUrl"])): ?>
-        <div class="noteBox">
-          <div class="noteBox__title">Materiały dodatkowe</div>
-          <div class="noteBox__text">Jakby ktoś jednak wolał poczytać – rozdział na czytnik oraz notatnik roboczy do tego rozdziału.</div>
-          <a class="noteBox__link" href="<?=htmlspecialchars($meta["notebookUrl"])?>" target="_blank" rel="noreferrer">Źródło w bibliotece</a>
-          <?php if(!empty($meta["pdfUrl"])): ?>
-            <a class="noteBox__link" href="<?=htmlspecialchars($meta["pdfUrl"])?>" target="_blank" rel="noreferrer">Pobierz PDF</a>
-          <?php endif; ?>
-        </div>
-      <?php endif; ?>
 
       <?php foreach(($data["sections"] ?? []) as $s): ?>
         <section class="section">
@@ -192,25 +221,68 @@ $extraImages = array_values(array_filter($images, function($p) use ($mainImage){
     </article>
   </section>
 
-  <?php if(count($files) > 0): ?>
+  <?php if(count($files) > 0 || !empty($data["links"])): ?>
     <aside class="sideNav sideNav--right">
-      <div class="glassPanel glassPanel--sticky glassPanel--small">
-        <div class="sideNav__title">Pliki</div>
-        <div class="files files--side">
-          <?php foreach($files as $f): $icon = icon_for($f); ?>
-            <a class="fileRow" href="<?=$f?>" download>
-              <span class="fileRow__icon icon icon--<?=$icon?>" aria-hidden="true"></span>
-              <span class="fileRow__name"><?=htmlspecialchars(basename($f))?></span>
-              <span class="fileRow__dl">Pobierz</span>
-            </a>
-          <?php endforeach; ?>
-        </div>
+      <div class="glassPanel glassPanel--sticky glassPanel--small" style="display:flex; flex-direction:column; gap:20px;">
+        
+        <?php if(count($files) > 0): ?>
+          <div>
+            <div class="sideNav__title">Pliki</div>
+            <div class="files files--side">
+              <?php foreach($files as $f): $icon = icon_for($f); ?>
+                <a class="fileRow" href="<?=$f?>" download>
+                  <span class="fileRow__icon icon icon--<?=$icon?>" aria-hidden="true"></span>
+                  <span class="fileRow__name"><?=htmlspecialchars(basename($f))?></span>
+                  <span class="fileRow__dl">Pobierz</span>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <?php if(!empty($data["links"])): ?>
+          <div>
+            <div class="sideNav__title">Linki</div>
+            <div class="links-list">
+              <?php foreach($data["links"] as $l): ?>
+                <a class="linkCard" href="<?=htmlspecialchars($l["url"])?>" target="_blank" rel="noreferrer">
+                  <div class="linkCard__body">
+                    <div class="linkCard__title"><?=htmlspecialchars($l["title"])?></div>
+                    <?php if(!empty($l["comment"])): ?>
+                      <div class="linkCard__comment"><?=htmlspecialchars($l["comment"])?></div>
+                    <?php endif; ?>
+                  </div>
+                  <span class="icon" style="font-size:12px; opacity:0.5;">↗</span>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
       </div>
     </aside>
   <?php endif; ?>
 
 </main>
 
+<!-- Modal na szczegóły dnia -->
+<div class="calModal" id="calModal">
+  <div class="calModal__content">
+    <div class="calModal__header">
+      <div class="calModal__title" id="modalTitle">Notatki</div>
+      <button class="rbBtn" id="modalClose">✕</button>
+    </div>
+    <div class="calModal__body" id="modalBody">
+      <!-- Ciało modala -->
+    </div>
+  </div>
+</div>
+
+<script>
+  window.CHAPTER_AUDIO = <?php echo $chapterAudio ? json_encode($chapterAudio) : 'null'; ?>;
+</script>
+<script src="assets/journal.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/calendar.js"></script>
 </body>
 </html>

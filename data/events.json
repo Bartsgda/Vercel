@@ -1,0 +1,45 @@
+{
+    "events": [
+        {
+            "id": "event-1",
+            "date": "2026-02-15",
+            "type": "chapter",
+            "title": "Mały przyjaciel",
+            "chapterId": "chapter1",
+            "color": "blue"
+        },
+        {
+            "id": "event-5",
+            "date": "2026-03-02",
+            "type": "chapter",
+            "title": "Współuzależnienie",
+            "chapterId": "chapter4",
+            "color": "blue"
+        },
+        {
+            "id": "event-2",
+            "date": "2026-03-09",
+            "type": "task",
+            "title": "Praca domowa",
+            "description": "Przeczytaj materiały z notatnika.",
+            "fileUrl": "media\/chapter1\/Reclaiming_Your_Life.pdf",
+            "color": "purple"
+        },
+        {
+            "id": "event-3",
+            "date": "2026-03-10",
+            "type": "note",
+            "title": "Notatka z sesji",
+            "description": "Przemyślenia na temat trójkąta dramatycznego...",
+            "color": "green"
+        },
+        {
+            "id": "event-4",
+            "date": "2026-03-12",
+            "type": "chapter",
+            "title": "Zaczarowane koło",
+            "chapterId": "chapter2",
+            "color": "blue"
+        }
+    ]
+}
